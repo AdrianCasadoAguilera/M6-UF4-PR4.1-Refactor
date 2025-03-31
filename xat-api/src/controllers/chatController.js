@@ -1,6 +1,7 @@
 // Importacions necessàries
 const Conversation = require('../models/Conversation');
 const Prompt = require('../models/Prompt');
+const SentimentAnalysis = require('../models/SentimentAnalysis');
 const { validateUUID } = require('../middleware/validators');
 const axios = require('axios');
 const { logger } = require('../config/logger');
@@ -376,9 +377,70 @@ const getConversation = async (req, res, next) => {
     }
 };
 
+const analyzeSentiment = async (req, res, next) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || text.trim().length === 0) {
+            logger.warn("Intent d'anàlisi de sentiment amb text buit");
+            return res.status(400).json({ message: 'El text és obligatori' });
+        }
+
+        logger.info('Iniciant anàlisi de sentiment', { textLength: text.length });
+
+        const OLLAMA_MODEL = process.env.OLLAMA_MODEL
+        const OLLAMA_URL = process.env.CHAT_API_OLLAMA_URL
+        const prompt = "Analitza el sentiment del següent text: " + req.text
+
+        const requestBody = {
+            model: OLLAMA_MODEL,
+            prompt: prompt,
+            stream: false
+        };
+
+        // Enviem la petició a Ollama
+        const response = await fetch(`${OLLAMA_URL}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+        
+        console.log(response)
+        const sentiment = response.data;
+        console.log(sentiment)
+        const score = 0
+
+        // Emmagatzemar l'anàlisi a la base de dades
+        const sentimentRecord = await SentimentAnalysis.create({
+            sentiment: sentiment,
+        });
+
+        logger.info('Anàlisi de sentiment completada i emmagatzemada', {
+            id: sentimentRecord.id,
+            sentiment,
+            score
+        });
+
+        res.status(201).json({
+            id: sentimentRecord.id,
+            text,
+            sentiment,
+            score,
+            message: 'Anàlisi de sentiment registrada correctament'
+        });
+    } catch (error) {
+        logger.error("Error en l'anàlisi de sentiment", {
+            error: error.message,
+            stack: error.stack
+        });
+        next(error);
+    }
+};
+
 // Exportació de les funcions públiques
 module.exports = {
     registerPrompt,
     getConversation,
-    listOllamaModels
+    listOllamaModels,
+    analyzeSentiment
 };
