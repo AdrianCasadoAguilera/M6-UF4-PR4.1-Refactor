@@ -77,7 +77,7 @@ router.get('/models', listOllamaModels);
 
 /**
  * @swagger
- * /api/chat/sentiments-analysis:
+ * /api/chat/sentiment-analysis:
  *   post:
  *     summary: Analitza el sentiment d'un missatge
  *     tags: [Chat]
@@ -88,12 +88,11 @@ router.get('/models', listOllamaModels);
  *           schema:
  *             type: object
  *             required:
- *               - promptId
+ *               - text
  *             properties:
- *               promptId:
+ *               text:
  *                 type: string
- *                 format: uuid
- *                 description: ID del prompt a analitzar
+ *                 description: Text a analitzar
  *     responses:
  *       200:
  *         description: Resultat de l'anàlisi de sentiment
@@ -102,20 +101,24 @@ router.get('/models', listOllamaModels);
  *             schema:
  *               type: object
  *               properties:
- *                 promptId:
+ *                 id:
  *                   type: string
- *                   format: uuid
+ *                 text:
+ *                   type: string
  *                 sentiment:
  *                   type: string
  *                   enum: [positive, neutral, negative]
  *                 score:
  *                   type: number
  *                   description: Puntuació del sentiment
+ *                 message:
+ *                   type: string
  *       400:
- *         description: Error de validació (ID de prompt invàlid o no trobat)
+ *         description: Error de validació 
  *       500:
  *         description: Error intern del servidor
  */
+
 router.post('/sentiment-analysis', analyzeSentiment);
 
 module.exports = router;

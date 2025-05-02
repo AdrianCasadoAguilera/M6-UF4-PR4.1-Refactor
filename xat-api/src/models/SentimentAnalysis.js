@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
-const Prompt = require('./Prompt');
 
 const SentimentAnalysis = sequelize.define('SentimentAnalysis', {
     id: {
@@ -24,9 +23,5 @@ const SentimentAnalysis = sequelize.define('SentimentAnalysis', {
         defaultValue: DataTypes.NOW
     }
 });
-
-// Establir relació
-SentimentAnalysis.belongsTo(Prompt, { foreignKey: 'promptId' });
-Prompt.hasOne(SentimentAnalysis, { foreignKey: 'promptId' });
 
 module.exports = SentimentAnalysis;

@@ -34,7 +34,7 @@ async function analyzeSentiment(text) {
             },
             body: JSON.stringify({
                 model: process.env.CHAT_API_OLLAMA_MODEL_TEXT,
-                prompt: `Analyze the sentiment of this text and respond with only one word (positive/negative/neutral): "${text}"`,
+                prompt: `Analyze the sentiment of this text and respond with only one word (positive/negative/neutral/error): "${text}"`,
                 stream: false
             })
         });
@@ -94,27 +94,37 @@ async function main() {
         const games = await readCSV(gamesFilePath);
         const reviews = await readCSV(reviewsFilePath);
 
-        // Iterem pels jocs
-        console.log('\n=== Llista de Jocs ===');
-        for (const game of games) {
-            console.log(`Codi: ${game.appid}, Nom: ${game.name}`);
+        // Preparem l'estructura de dades per la sortida
+        const output = {
+            timestamp: new Date().toISOString(),
+            games: []
+        };
+
+        // Iterem pels 2 primers jocs
+        const gamesToAnalyze = games.slice(0, 2);
+        for (const game of gamesToAnalyze) {
+            console.log(`\n=== Anàlisi de reviews per ${game.name} ===`);
+            const gameReviews = reviews.filter(review => review.app_id === game.appid).slice(0, 2);
+            const statistics = { positive: 0, negative: 0, neutral: 0, error: 0 };
+
+            for (const review of gameReviews) {
+                const sentiment = await analyzeSentiment(review.content);
+                statistics[sentiment]++;
+            }
+
+            output.games.push({
+                appid: game.appid,
+                name: game.name,
+                statistics: statistics
+            });
         }
 
-        // Iterem per les primeres 10 reviews i analitzem el sentiment
-        console.log('\n=== Anàlisi de Sentiment de Reviews ===');
-        const reviewsToAnalyze = reviews.slice(0, 2);
-        
-        for (const review of reviewsToAnalyze) {
-            console.log(`\nProcessant review: ${review.id}`);
-            const sentiment = await analyzeSentiment(review.content);
-            console.log(`Review ID: ${review.id}`);
-            console.log(`Joc ID: ${review.app_id}`);
-            console.log(`Contingut: ${review.content.substring(0, 100)}...`);
-            console.log(`Sentiment (Ollama): ${sentiment}`);
-            console.log('------------------------');
-        }
-        console.log(`\nNOMÉS AVALUEM LES DUES PRIMERES REVIEWS`);
-     } catch (error) {
+        // Guardem la sortida en un fitxer JSON
+        const outputPath = path.join(__dirname, dataPath, 'exercici2_resposta.json');
+        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+
+        console.log(`\nResultats guardats a: ${outputPath}`);
+    } catch (error) {
         console.error('Error durant l\'execució:', error.message);
     }
 }

@@ -388,44 +388,50 @@ const analyzeSentiment = async (req, res, next) => {
 
         logger.info('Iniciant anàlisi de sentiment', { textLength: text.length });
 
-        const OLLAMA_MODEL = process.env.OLLAMA_MODEL
-        const OLLAMA_URL = process.env.CHAT_API_OLLAMA_URL
-        const prompt = "Analitza el sentiment del següent text: " + req.text
+        const OLLAMA_MODEL = process.env.CHAT_API_OLLAMA_MODEL;
+        const OLLAMA_URL = process.env.CHAT_API_OLLAMA_URL;
+        const prompt = "Analitza el sentiment del següent text i indica amb només una paraula si és positiu, negatiu o neutral. Utilitza només les paraules 'positiu', 'negatiu' o 'neutral'. El text és el següent: " + text;
 
         const requestBody = {
             model: OLLAMA_MODEL,
-            prompt: prompt,
+            prompt,
             stream: false
         };
 
-        // Enviem la petició a Ollama
         const response = await fetch(`${OLLAMA_URL}/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
         });
-        
-        console.log(response)
-        const sentiment = response.data;
-        console.log(sentiment)
-        const score = 0
 
-        // Emmagatzemar l'anàlisi a la base de dades
+        const result = await response.json();
+        console.log('📦 Resposta d’Ollama:', result);
+
+        
+        function parseSentiment(text) {
+            const lower = text.toLowerCase();
+            if (lower.includes('positiu') || lower.includes('positive')) return 'positive';
+            if (lower.includes('negatiu') || lower.includes('negative')) return 'negative';
+            return 'neutral';
+        }
+
+        const sentimentText = result.response?.trim() || "Sense resposta";
+        const sentimentValue = parseSentiment(sentimentText);
+
         const sentimentRecord = await SentimentAnalysis.create({
-            sentiment: sentiment,
+            sentiment: sentimentValue,
         });
+
 
         logger.info('Anàlisi de sentiment completada i emmagatzemada', {
             id: sentimentRecord.id,
-            sentiment,
-            score
+            sentiment: sentimentText
         });
 
         res.status(201).json({
             id: sentimentRecord.id,
             text,
-            sentiment,
-            score,
+            sentiment: sentimentText,
             message: 'Anàlisi de sentiment registrada correctament'
         });
     } catch (error) {
@@ -436,6 +442,7 @@ const analyzeSentiment = async (req, res, next) => {
         next(error);
     }
 };
+
 
 // Exportació de les funcions públiques
 module.exports = {
