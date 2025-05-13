@@ -5,10 +5,11 @@ const SentimentAnalysis = require('../models/SentimentAnalysis');
 const { validateUUID } = require('../middleware/validators');
 const axios = require('axios');
 const { logger } = require('../config/logger');
+const { TEXT_MODEL, VISION_MODEL } = require('../config/ollamaModels');
 
 // Constants de configuració
 const OLLAMA_API_URL = process.env.CHAT_API_OLLAMA_URL
-const DEFAULT_OLLAMA_MODEL = process.env.CHAT_API_OLLAMA_MODEL
+const DEFAULT_OLLAMA_MODEL = TEXT_MODEL;
 
 /**
  * Retorna la llista de models disponibles a Ollama

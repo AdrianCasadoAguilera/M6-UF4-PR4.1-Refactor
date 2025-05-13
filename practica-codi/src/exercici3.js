@@ -7,7 +7,8 @@ require('dotenv').config();
 const IMAGES_SUBFOLDER = 'imatges/animals';
 const IMAGE_TYPES = ['.jpg', '.jpeg', '.png', '.gif'];
 const OLLAMA_URL = process.env.CHAT_API_OLLAMA_URL;
-const OLLAMA_MODEL = process.env.CHAT_API_OLLAMA_MODEL_VISION;
+const { VISION_MODEL } = require('../../xat-api/src/config/ollamaModels');
+const OLLAMA_MODEL = VISION_MODEL;
 
 // Funció per llegir un fitxer i convertir-lo a Base64
 async function imageToBase64(imagePath) {

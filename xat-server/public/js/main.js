@@ -131,7 +131,11 @@ async function loadModels() {
         const response = await fetch(`${API_ENDPOINT}/chat/models`);
         
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const message = errorData.message || `Error HTTP: ${response.status}`;
+                throw new Error(message);
+            }
         }
 
         const data = await response.json();

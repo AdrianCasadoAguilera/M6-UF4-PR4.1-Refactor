@@ -3,6 +3,7 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
+const { TEXT_MODEL } = require('../../xat-api/src/config/ollamaModels');
 
 // Constants
 const DATA_SUBFOLDER = 'steamreviews';
@@ -25,7 +26,6 @@ async function readCSV(filePath) {
 async function analyzeSentiment(text) {
     try {
         console.log('Enviant petició a Ollama...');
-        console.log('Model:', process.env.CHAT_API_OLLAMA_MODEL_TEXT);
         
         const response = await fetch(`${process.env.CHAT_API_OLLAMA_URL}/generate`, {
             method: 'POST',
@@ -33,8 +33,8 @@ async function analyzeSentiment(text) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: process.env.CHAT_API_OLLAMA_MODEL_TEXT,
                 prompt: `Analyze the sentiment of this text and respond with only one word (positive/negative/neutral/error): "${text}"`,
+                model: TEXT_MODEL,
                 stream: false
             })
         });
@@ -58,7 +58,7 @@ async function analyzeSentiment(text) {
         console.error('Error detallat en la petició a Ollama:', error);
         console.error('Detalls adicionals:', {
             url: `${process.env.CHAT_API_OLLAMA_URL}/generate`,
-            model: process.env.CHAT_API_OLLAMA_MODEL_TEXT,
+            model: TEXT_MODEL,
             promptLength: text.length
         });
         return 'error';

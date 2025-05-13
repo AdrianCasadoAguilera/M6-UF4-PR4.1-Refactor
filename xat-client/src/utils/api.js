@@ -48,6 +48,9 @@ export async function sendPrompt({ conversationId, prompt, model, stream }) {
             return response.data;
         }
     } catch (error) {
-        throw new Error('Error enviant el prompt');
+        if (error.response && error.response.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+        throw new Error('Error desconegut enviant el prompt');
     }
 }
