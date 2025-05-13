@@ -77,7 +77,8 @@ async function startServer() {
         // Sincronitzar models amb la base de dades
         await sequelize.sync({
             // No fa res si la taula ja existeix
-            force: false,  // Valor per defecte, segur per producció
+            force: process.env.NODE_ENV === 'test',
+  // Valor per defecte, segur per producció
         
             // Elimina i recrea totes les taules cada vegada (PERILLÓS!)
             // force: true,   // Útil per development/testing, MAI per producció
